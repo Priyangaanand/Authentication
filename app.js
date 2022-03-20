@@ -4,7 +4,8 @@ const app = express();
 const ejs= require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds=10;
 app.use(express.urlencoded({extended:true}));
 app.set("view engine","ejs");
 app.use(express.static("public"));
@@ -13,8 +14,6 @@ const userSchema = new mongoose.Schema({
     email:"String",
     password:"String"
 });
-console.log(process.env.SECERT);
-userSchema.plugin(encrypt, { secret:process.env.SECERT,encryptedFields:["password"]});
 const userCollect = mongoose.model("user",userSchema);
 app.get("/",function(req,res)
 {
@@ -31,26 +30,30 @@ res.render("register");
 });
 app.post("/register",function(req,res)
 {
-    const userData = new userCollect({
-        email:req.body.username,
-        password:md5(req.body.password)
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        const userData = new userCollect({
+            email:req.body.username,
+            password:hash
+        });
+        userData.save(function(err)
+        {
+            if(!err)
+            {
+                res.render("secrets");
+                console.log(hash);
+            }
+            else
+            {
+                console.log(err);
+            }
+        })
     });
-    userData.save(function(err)
-    {
-        if(!err)
-        {
-            res.render("secrets");
-        }
-        else
-        {
-            console.log(err);
-        }
-    })
+    
 });
 app.post("/login",function(req,res)
 {
     const username = req.body.username;
-    const password = md5(req.body.password);
+    const password = req.body.password;
     userCollect.findOne({email:username},function(err,founder)
     {
         if(err)
@@ -59,14 +62,16 @@ app.post("/login",function(req,res)
         }
         else
         {
-            // if (founder)
+            if (founder)
             {
-                if(founder.password==password)
-                {
-                     console.log(founder.password);
-                     console.log(password);
-                    res.render("secrets");
-                }
+                bcrypt.compare(password, founder.password, function(err, result) {
+                    if(result == true)
+                    {
+                        res.render("secrets");
+                        console.log(password);
+                       
+                    }
+                });
             }
            
         }
