@@ -4,6 +4,7 @@ const app = express();
 const ejs= require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
+const md5 = require("md5");
 app.use(express.urlencoded({extended:true}));
 app.set("view engine","ejs");
 app.use(express.static("public"));
@@ -32,7 +33,7 @@ app.post("/register",function(req,res)
 {
     const userData = new userCollect({
         email:req.body.username,
-        password:req.body.password
+        password:md5(req.body.password)
     });
     userData.save(function(err)
     {
@@ -49,7 +50,7 @@ app.post("/register",function(req,res)
 app.post("/login",function(req,res)
 {
     const username = req.body.username;
-    const password = req.body.password;
+    const password = md5(req.body.password);
     userCollect.findOne({email:username},function(err,founder)
     {
         if(err)
