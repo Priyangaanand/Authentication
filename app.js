@@ -20,7 +20,7 @@ app.use(session({
   }))
 app.use(passport.initialize());
 app.use(passport.session());
-mongoose.connect('mongodb://localhost:27017/SecertsDB');
+mongoose.connect("mongodb+srv://adminaarthi:Log123@cluster0.subbc.mongodb.net/SecertsDB?retryWrites=true&w=majority");
 const SecretSchema = new mongoose.Schema({
     secret_User:[{type:String}]
 });
@@ -191,7 +191,7 @@ app.post("/register",function(req,res)
 });
 
 app.post("/login", passport.authenticate("local", {successRedirect:'/secrets',failureRedirect: '/login' }));
-app.listen(3000,function()
+app.listen(process.env.PORT|| 3000,function()
 {
     console.log("Server is running on port 3000");
 });
